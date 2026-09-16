@@ -1,7 +1,9 @@
 # MargSetu: Real-Time Transit Tracking System
 
 ## Overview
-MargSetu is a production-ready fleet management and public transit tracking system. It is specifically architected to handle rural environments where mobile internet connectivity is highly inconsistent. The system provides real-time GPS tracking for passengers while ensuring zero data loss during driver network outages.
+MargSetu is a real-time bus tracking platform built specifically for rural areas. 
+
+In many villages, buses are the only way to travel, but spotty internet makes standard tracking apps fail. MargSetu solves this by allowing bus drivers to broadcast their live location over the internet, and automatically falling back to SMS text messages when they enter a cellular dead zone. This ensures passengers waiting at the bus stop always know exactly where their bus is, without any gaps on the map.
 
 ## System Architecture
 The platform consists of four loosely coupled components:
