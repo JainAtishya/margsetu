@@ -80,7 +80,19 @@ CREATE UNIQUE INDEX one_active_trip_per_driver ON trips (driver_id) WHERE status
 CREATE UNIQUE INDEX one_active_trip_per_bus ON trips (bus_id) WHERE status = 'ACTIVE';
 
 
--- 8. Location Updates (Time-series log)
+-- 8. Refresh Tokens (For Secure Authentication & Rotation)
+CREATE TABLE refresh_tokens (
+    token UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    driver_id UUID REFERENCES drivers(id) ON DELETE CASCADE,
+    family_id UUID NOT NULL,          -- Groups tokens from the same login session
+    is_used BOOLEAN DEFAULT FALSE,    -- Triggers theft detection if someone uses a used token
+    is_revoked BOOLEAN DEFAULT FALSE, -- Kills the token manually
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- 9. Location Updates (Time-series log)
 CREATE TABLE location_updates (
     id BIGSERIAL PRIMARY KEY,  -- BIGSERIAL for high-write performance, not UUID
     trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
