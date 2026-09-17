@@ -8,6 +8,8 @@ const driverRoutes = require('./routes/driver.routes');
 const smsRoutes = require('./routes/sms.routes');
 const passengerRoutes = require('./routes/passenger.routes');
 
+const errorHandler = require('./middleware/errorHandler');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -30,6 +32,9 @@ app.use('/api/passenger', passengerRoutes);
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'MargSetu Server is running' });
 });
+
+// IMPORTANT: The Error Handler MUST be the very last middleware!
+app.use(errorHandler);
 
 // 5. IMPORTANT: Start the 'server', NOT the 'app'
 server.listen(PORT, () => {

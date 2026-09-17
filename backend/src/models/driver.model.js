@@ -12,6 +12,15 @@ class DriverModel {
         return result.rows[0];
     }
 
+    // Finds a driver by their ID (used during token refresh)
+    static async findById(id) {
+        const result = await pool.query(
+            'SELECT id, operator_id, name, is_active FROM drivers WHERE id = $1',
+            [id]
+        );
+        return result.rows[0];
+    }
+
     // --- REFRESH TOKEN QUERIES ---
 
     // Saves a newly generated refresh token to the database

@@ -28,7 +28,6 @@ class TripModel {
             JOIN drivers d ON t.driver_id = d.id
             WHERE d.phone = $1 
               AND t.status = 'ACTIVE'
-              AND t.scheduled_date = CURRENT_DATE
             LIMIT 1;
         `;
         const result = await pool.query(query, [phone]);

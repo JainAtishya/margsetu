@@ -1,68 +1,32 @@
 const DriverService = require('../services/driver.service');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiResponse = require('../utils/ApiResponse');
+const ApiError = require('../utils/ApiError');
 
-// The Controller's ONLY job is to handle HTTP Requests and Responses.
-// It extracts data from 'req', passes it to the Service, and sends 'res'.
 class DriverController {
     
-    static async login(req, res) {
-        try {
-            const { phone, password } = req.body;
+    // Notice how clean this is! No try/catch, no ugly if/else statements.
+    static login = asyncHandler(async (req, res) => {
+        const { phone, password } = req.body;
 
-            if (!phone || !password) {
-                return res.status(400).json({ error: 'Phone and password are required' });
-            }
-
-            // Call the business logic layer
-            const result = await DriverService.login(phone, password);
-
-            // Send successful response
-            return res.status(200).json({
-                message: 'Login successful',
-                data: result
-            });
-
-        } catch (error) {
-            // Handle specific business logic errors
-            if (error.message === 'INVALID_CREDENTIALS') {
-                return res.status(401).json({ error: 'Invalid phone number or password' });
-            }
-            if (error.message === 'ACCOUNT_DISABLED') {
-                return res.status(403).json({ error: 'Account is disabled. Contact operator.' });
-            }
-            
-            console.error('[ERROR] Login Controller:', error);
-            return res.status(500).json({ error: 'Internal server error' });
+        if (!phone || !password) {
+            throw new ApiError(400, 'Phone and password are required');
         }
-    }
 
-    static async refresh(req, res) {
-        try {
-            const { refresh_token } = req.body;
+        const result = await DriverService.login(phone, password);
+        return res.status(200).json(new ApiResponse(200, result, 'Login successful'));
+    });
 
-            if (!refresh_token) {
-                return res.status(400).json({ error: 'Refresh token is required' });
-            }
+    static refresh = asyncHandler(async (req, res) => {
+        const { refresh_token } = req.body;
 
-            // Call the rotation/trap logic
-            const newTokens = await DriverService.refreshSession(refresh_token);
-
-            return res.status(200).json({
-                message: 'Token refreshed successfully',
-                data: newTokens
-            });
-
-        } catch (error) {
-            if (error.message === 'SECURITY_BREACH_DETECTED_PLEASE_LOGIN_AGAIN') {
-                return res.status(403).json({ error: 'Security breach detected. Please log in again.' });
-            }
-            if (['TOKEN_NOT_FOUND', 'TOKEN_REVOKED', 'TOKEN_EXPIRED'].includes(error.message)) {
-                return res.status(401).json({ error: 'Invalid or expired session. Please log in again.' });
-            }
-
-            console.error('[ERROR] Refresh Controller:', error);
-            return res.status(500).json({ error: 'Internal server error' });
+        if (!refresh_token) {
+            throw new ApiError(400, 'Refresh token is required');
         }
-    }
+
+        const newTokens = await DriverService.refreshSession(refresh_token);
+        return res.status(200).json(new ApiResponse(200, newTokens, 'Token refreshed successfully'));
+    });
 }
 
 module.exports = DriverController;

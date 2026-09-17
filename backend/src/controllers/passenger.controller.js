@@ -1,48 +1,33 @@
 const RouteModel = require('../models/route.model');
 const TripModel = require('../models/trip.model');
 const LocationModel = require('../models/location.model');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiResponse = require('../utils/ApiResponse');
+const ApiError = require('../utils/ApiError');
 
 class PassengerController {
     
-    // Step 1: Show the passenger all available routes
-    static async getAllRoutes(req, res) {
-        try {
-            const routes = await RouteModel.getAllRoutes();
-            return res.status(200).json({ data: routes });
-        } catch (error) {
-            console.error('[ERROR] PassengerController.getAllRoutes:', error);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-    }
+    static getAllRoutes = asyncHandler(async (req, res) => {
+        const routes = await RouteModel.getAllRoutes();
+        return res.status(200).json(new ApiResponse(200, routes, 'Routes fetched successfully'));
+    });
 
-    // Step 2: Show the passenger all buses for their selected route
-    static async getBusesForRoute(req, res) {
-        try {
-            const routeId = req.params.routeId;
-            const trips = await TripModel.findTripsByRouteToday(routeId);
-            return res.status(200).json({ data: trips });
-        } catch (error) {
-            console.error('[ERROR] PassengerController.getBusesForRoute:', error);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-    }
+    static getBusesForRoute = asyncHandler(async (req, res) => {
+        const routeId = req.params.routeId;
+        const trips = await TripModel.findTripsByRouteToday(routeId);
+        return res.status(200).json(new ApiResponse(200, trips, 'Buses fetched successfully'));
+    });
 
-    // Step 3: Fetch the initial live location of a specific active bus
-    static async getTripLocation(req, res) {
-        try {
-            const tripId = req.params.tripId;
-            const location = await LocationModel.getLatestLocationForTrip(tripId);
-            
-            if (!location) {
-                return res.status(404).json({ error: 'No location data found for this trip yet' });
-            }
-
-            return res.status(200).json({ data: location });
-        } catch (error) {
-            console.error('[ERROR] PassengerController.getTripLocation:', error);
-            return res.status(500).json({ error: 'Internal server error' });
+    static getTripLocation = asyncHandler(async (req, res) => {
+        const tripId = req.params.tripId;
+        const location = await LocationModel.getLatestLocationForTrip(tripId);
+        
+        if (!location) {
+            throw new ApiError(404, 'No location data found for this trip yet');
         }
-    }
+
+        return res.status(200).json(new ApiResponse(200, location, 'Latest location fetched successfully'));
+    });
 }
 
 module.exports = PassengerController;
