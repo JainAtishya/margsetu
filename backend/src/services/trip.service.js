@@ -1,6 +1,7 @@
 const TripModel = require('../models/trip.model');
 const LocationModel = require('../models/location.model');
 const pool = require('../db/pool');
+const { getIo } = require('../socket'); // 1. Import our Socket instance
 
 class TripService {
     
@@ -45,7 +46,14 @@ class TripService {
             return { duplicate: true, message: 'Duplicate location ignored' };
         }
 
-        // TODO: In the next phase, we will trigger Socket.IO here to push to passengers!
+        // Step 3: REAL-TIME BROADCAST!
+        // We yell this new location exclusively into the 'trip:123' room.
+        try {
+            const io = getIo();
+            io.to(`trip:${tripId}`).emit('location_update', newLocation);
+        } catch (socketError) {
+            console.error('[WARNING] Failed to emit socket event, but DB saved successfully', socketError);
+        }
         
         return { duplicate: false, location: newLocation };
     }
