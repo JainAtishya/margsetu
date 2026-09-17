@@ -12,6 +12,7 @@ router.post('/auth/refresh', DriverController.refresh);
 // Protected trip endpoints (Must have valid JWT)
 router.get('/trip', verifyToken, TripController.getTrip);
 router.post('/trip/:id/start', verifyToken, TripController.startTrip);
+router.post('/trip/:id/location', verifyToken, TripController.submitLocation);
 router.post('/trip/:id/end', verifyToken, TripController.endTrip);
 
 module.exports = router;

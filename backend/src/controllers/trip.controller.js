@@ -36,6 +36,27 @@ class TripController {
         }
     }
 
+    static async submitLocation(req, res) {
+        try {
+            const tripId = req.params.id;
+            const { latitude, longitude, gps_timestamp } = req.body;
+
+            if (!latitude || !longitude || !gps_timestamp) {
+                return res.status(400).json({ error: 'Missing latitude, longitude, or gps_timestamp' });
+            }
+
+            const result = await TripService.submitLocation(tripId, req.driver.id, latitude, longitude, gps_timestamp);
+            return res.status(200).json(result);
+
+        } catch (error) {
+            if (error.message === 'UNAUTHORIZED_OR_NOT_ACTIVE') {
+                return res.status(403).json({ error: 'Trip is not active or you do not have permission to update it.' });
+            }
+            console.error('[ERROR] Submit Location Controller:', error);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
     static async endTrip(req, res) {
         try {
             const tripId = req.params.id;
