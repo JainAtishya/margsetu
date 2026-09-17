@@ -50,6 +50,25 @@ class TripService {
         return { duplicate: false, location: newLocation };
     }
 
+    // A helper for the SMS Gateway. It translates a phone number into a tripId and driverId,
+    // then pipes the data right back into the main submitLocation function.
+    static async submitLocationByPhone(phone, latitude, longitude, gpsTimestamp) {
+        const activeTrip = await TripModel.findActiveTripByDriverPhone(phone);
+        
+        if (!activeTrip) {
+            throw new Error('NO_ACTIVE_TRIP_FOR_PHONE');
+        }
+
+        return this.submitLocation(
+            activeTrip.trip_id, 
+            activeTrip.driver_id, 
+            latitude, 
+            longitude, 
+            gpsTimestamp, 
+            'SMS' // Hardcoded source so we can audit offline rates!
+        );
+    }
+
     static async endTrip(tripId, driverId) {
         const updatedTrip = await TripModel.updateTripStatus(tripId, driverId, 'COMPLETED');
         if (!updatedTrip) throw new Error('TRIP_NOT_FOUND_OR_UNAUTHORIZED');

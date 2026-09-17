@@ -3,6 +3,7 @@ const cors = require('cors');
 
 // Import routers
 const driverRoutes = require('./routes/driver.routes');
+const smsRoutes = require('./routes/sms.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.use(express.json()); // Parses incoming JSON data in the req.body
 
 // Mount Routes
 app.use('/api/driver', driverRoutes);
+app.use('/api/sms', smsRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {

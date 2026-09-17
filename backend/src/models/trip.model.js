@@ -20,6 +20,21 @@ class TripModel {
         return result.rows[0];
     }
 
+    // Used by the SMS Gateway to look up an active trip using only a phone number
+    static async findActiveTripByDriverPhone(phone) {
+        const query = `
+            SELECT t.id as trip_id, t.driver_id 
+            FROM trips t
+            JOIN drivers d ON t.driver_id = d.id
+            WHERE d.phone = $1 
+              AND t.status = 'ACTIVE'
+              AND t.scheduled_date = CURRENT_DATE
+            LIMIT 1;
+        `;
+        const result = await pool.query(query, [phone]);
+        return result.rows[0];
+    }
+
     // Changes the status of the trip (e.g., to 'ACTIVE' or 'COMPLETED')
     // We include driverId in the WHERE clause so a driver can't modify someone else's trip
     static async updateTripStatus(tripId, driverId, status) {
