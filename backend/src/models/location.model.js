@@ -16,6 +16,20 @@ class LocationModel {
         // If result.rows[0] is undefined, it means Postgres caught a duplicate and ignored it
         return result.rows[0]; 
     }
+
+    // Fetches the absolute latest GPS ping for a specific trip.
+    // Uses the idx_latest_location composite index to run in O(log N) time instantly.
+    static async getLatestLocationForTrip(tripId) {
+        const query = `
+            SELECT latitude, longitude, gps_timestamp, received_at, source
+            FROM location_updates
+            WHERE trip_id = $1
+            ORDER BY gps_timestamp DESC
+            LIMIT 1;
+        `;
+        const result = await pool.query(query, [tripId]);
+        return result.rows[0];
+    }
 }
 
 module.exports = LocationModel;

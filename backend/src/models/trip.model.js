@@ -35,6 +35,28 @@ class TripModel {
         return result.rows[0];
     }
 
+    // Fetches all buses scheduled or currently driving on a specific route today
+    static async findTripsByRouteToday(routeId) {
+        const query = `
+            SELECT t.id as trip_id, t.status, t.scheduled_date,
+                   b.registration_number as bus_number,
+                   d.name as driver_name
+            FROM trips t
+            JOIN buses b ON t.bus_id = b.id
+            JOIN drivers d ON t.driver_id = d.id
+            WHERE t.route_id = $1 
+              AND t.scheduled_date = CURRENT_DATE
+            ORDER BY 
+               CASE status 
+                 WHEN 'ACTIVE' THEN 1 
+                 WHEN 'PENDING' THEN 2 
+                 ELSE 3 
+               END;
+        `;
+        const result = await pool.query(query, [routeId]);
+        return result.rows;
+    }
+
     // Changes the status of the trip (e.g., to 'ACTIVE' or 'COMPLETED')
     // We include driverId in the WHERE clause so a driver can't modify someone else's trip
     static async updateTripStatus(tripId, driverId, status) {
