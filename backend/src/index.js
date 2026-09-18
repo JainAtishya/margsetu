@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http'); // 1. Import Node's native HTTP module
+const morgan = require('morgan');
 const { initSocket } = require('./socket'); // 2. Import our socket initializer
 
 // Import routers
@@ -22,6 +23,7 @@ initSocket(server);
 // Middleware
 app.use(cors()); // Allows our Android apps to talk to this API
 app.use(express.json()); // Parses incoming JSON data in the req.body
+app.use(morgan('dev')); // Logs all incoming HTTP requests to the console
 
 // Mount Routes
 app.use('/api/driver', driverRoutes);
@@ -37,6 +39,6 @@ app.get('/health', (req, res) => {
 app.use(errorHandler);
 
 // 5. IMPORTANT: Start the 'server', NOT the 'app'
-server.listen(PORT, () => {
-    console.log(`[SUCCESS] MargSetu Backend & WebSockets running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`[SUCCESS] MargSetu Backend & WebSockets running on http://0.0.0.0:${PORT}`);
 });
