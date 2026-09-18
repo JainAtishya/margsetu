@@ -30,8 +30,17 @@ class TripController {
     });
 
     static endTrip = asyncHandler(async (req, res) => {
-        const trip = await TripService.endTrip(req.params.id, req.driver.id);
-        return res.status(200).json(new ApiResponse(200, trip, 'Trip ended successfully'));
+        const tripId = req.params.id;
+        const driverId = req.driver.id;
+        const result = await TripService.endTrip(tripId, driverId);
+        res.status(200).json(new ApiResponse(200, result, "Trip ended successfully"));
+    });
+
+    static getTripDetails = asyncHandler(async (req, res) => {
+        const tripId = req.params.id;
+        const driverId = req.driver.id;
+        const result = await TripService.getTripDetails(tripId, driverId);
+        res.status(200).json(new ApiResponse(200, result, "Trip details fetched successfully"));
     });
 }
 

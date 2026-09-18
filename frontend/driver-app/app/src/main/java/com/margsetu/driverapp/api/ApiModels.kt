@@ -46,10 +46,31 @@ data class LoginData(
 
 data class TripData(
     @SerializedName("trip_id") val tripId: String,
-    val status: String,
-    @SerializedName("scheduled_date") val scheduledDate: String,
+    @SerializedName("bus_number") val busNumber: String,
     @SerializedName("route_code") val routeCode: String,
-    @SerializedName("bus_number") val busNumber: String
+    @SerializedName("route_name") val routeName: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("scheduled_date") val scheduledDate: String
+)
+
+data class TripDetailsData(
+    val tripId: String,
+    val status: String,
+    val scheduledDate: String,
+    val bus: BusDetails,
+    val route: RouteDetails
+)
+
+data class BusDetails(
+    val id: String,
+    val registrationNumber: String,
+    val capacity: Int
+)
+
+data class RouteDetails(
+    val id: String,
+    val code: String,
+    val name: String
 )
 
 data class LocationData(

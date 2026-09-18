@@ -39,6 +39,15 @@ class DriverService {
         };
     }
 
+    static async saveRefreshToken(driverId, refreshToken) {
+        return await DriverModel.updateRefreshToken(driverId, refreshToken);
+    }
+
+    static async logout(driverId) {
+        // Nullify the refresh token in the database so it cannot be used again
+        return await DriverModel.updateRefreshToken(driverId, null);
+    }
+
     static async refreshSession(oldTokenString) {
         const tokenRecord = await DriverModel.getRefreshToken(oldTokenString);
 

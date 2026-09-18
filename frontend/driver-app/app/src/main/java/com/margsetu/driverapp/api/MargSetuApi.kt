@@ -12,6 +12,9 @@ interface MargSetuApi {
     @POST("api/driver/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<LoginData>>
 
+    @POST("api/driver/auth/logout")
+    suspend fun logout(): Response<ApiResponse<Any>>
+
     @POST("api/driver/auth/refresh")
     suspend fun refreshSession(@Body request: RefreshRequest): Response<ApiResponse<TokenData>>
 
@@ -19,8 +22,16 @@ interface MargSetuApi {
     @GET("api/driver/trip")
     suspend fun getAssignedTrip(): Response<ApiResponse<TripData>>
 
+    @GET("api/driver/trip/{id}/details")
+    suspend fun getTripDetails(@Path("id") tripId: String): Response<ApiResponse<TripDetailsData>>
+
     @POST("api/driver/trip/{tripId}/start")
     suspend fun startTrip(
+        @Path("tripId") tripId: String
+    ): Response<ApiResponse<TripData>>
+
+    @POST("api/driver/trip/{tripId}/end")
+    suspend fun endTrip(
         @Path("tripId") tripId: String
     ): Response<ApiResponse<TripData>>
 

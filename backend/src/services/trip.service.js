@@ -68,6 +68,14 @@ class TripService {
         if (!updatedTrip) throw new ApiError(404, 'Trip not found or you are not authorized to end it.');
         return updatedTrip;
     }
+
+    static async getTripDetails(tripId, driverId) {
+        const details = await TripModel.getTripDetailsById(tripId, driverId);
+        if (!details) {
+            throw new ApiError(404, 'Trip not found or unauthorized');
+        }
+        return details;
+    }
 }
 
 module.exports = TripService;

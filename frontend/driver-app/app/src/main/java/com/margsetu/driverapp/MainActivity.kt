@@ -36,14 +36,83 @@ class MainActivity : AppCompatActivity() {
         val inputPhone = findViewById<EditText>(R.id.inputPhone)
         val inputPassword = findViewById<EditText>(R.id.inputPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
-        val textTripDetails = findViewById<TextView>(R.id.textTripDetails)
+        val cardTripItem = findViewById<View>(R.id.cardTripItem)
+        val textRouteName = findViewById<TextView>(R.id.textRouteName)
+        val textBusInfo = findViewById<TextView>(R.id.textBusInfo)
+        val textTripFullDetails = findViewById<TextView>(R.id.textTripFullDetails)
         val btnStartTrip = findViewById<Button>(R.id.btnStartTrip)
+        val btnEndTrip = findViewById<Button>(R.id.btnEndTrip)
+        val btnBack = findViewById<View>(R.id.btnBack)
+        val btnLogout = findViewById<View>(R.id.btnLogout)
+        
+        val layoutTripDetails = findViewById<View>(R.id.layoutTripDetails)
 
         // If the driver is already logged in, skip straight to the dashboard!
         if (tokenManager.getAccessToken() != null) {
             layoutLogin.visibility = View.GONE
             layoutDashboard.visibility = View.VISIBLE
-            fetchAssignedTrip(textTripDetails)
+            fetchAssignedTrip(textRouteName, textBusInfo, textTripFullDetails)
+        }
+
+        // Dashboard Item Click Listener
+        cardTripItem.setOnClickListener {
+            val tripId = currentTripId ?: return@setOnClickListener
+            
+            // Show a tiny loading state (optional, but good UX)
+            textTripFullDetails.text = "Loading details..."
+            layoutDashboard.visibility = View.GONE
+            layoutTripDetails.visibility = View.VISIBLE
+
+            mainScope.launch {
+                try {
+                    val response = withContext(Dispatchers.IO) {
+                        NetworkModule.getApi(applicationContext).getTripDetails(tripId)
+                    }
+
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val details = response.body()?.data!!
+                        val fullText = """
+                            Bus Plate: ${details.bus.registrationNumber}
+                            Bus Capacity: ${details.bus.capacity} seats
+                            Route Name: ${details.route.name}
+                            Route Code: ${details.route.code}
+                            Status: ${details.status}
+                        """.trimIndent()
+                        textTripFullDetails.text = fullText
+                    } else {
+                        textTripFullDetails.text = "Failed to load detailed info."
+                    }
+                } catch (e: Exception) {
+                    textTripFullDetails.text = "Network Error loading details."
+                }
+            }
+        }
+
+        // Back Button Click Listener
+        btnBack.setOnClickListener {
+            layoutTripDetails.visibility = View.GONE
+            layoutDashboard.visibility = View.VISIBLE
+        }
+
+        // Logout Button Click Listener
+        btnLogout.setOnClickListener {
+            mainScope.launch {
+                try {
+                    withContext(Dispatchers.IO) {
+                        NetworkModule.getApi(applicationContext).logout()
+                    }
+                } catch (e: Exception) {}
+                
+                tokenManager.clearTokens()
+                currentTripId = null
+                
+                val serviceIntent = Intent(this@MainActivity, LocationService::class.java)
+                stopService(serviceIntent)
+                
+                layoutDashboard.visibility = View.GONE
+                layoutTripDetails.visibility = View.GONE
+                layoutLogin.visibility = View.VISIBLE
+            }
         }
 
         // Login Button Click Listener
@@ -56,7 +125,6 @@ class MainActivity : AppCompatActivity() {
             btnLogin.text = "Logging in..."
             btnLogin.isEnabled = false
 
-            // Launch a background coroutine to make the network request
             mainScope.launch {
                 try {
                     val request = LoginRequest(phone, password)
@@ -66,15 +134,12 @@ class MainActivity : AppCompatActivity() {
 
                     if (response.isSuccessful && response.body()?.success == true) {
                         val loginData = response.body()?.data!!
-                        // 1. Save tokens securely
                         tokenManager.saveTokens(loginData.tokens.accessToken, loginData.tokens.refreshToken)
                         
-                        // 2. Hide Login, Show Dashboard
                         layoutLogin.visibility = View.GONE
                         layoutDashboard.visibility = View.VISIBLE
                         
-                        // 3. Fetch the trip assigned to them
-                        fetchAssignedTrip(textTripDetails)
+                        fetchAssignedTrip(textRouteName, textBusInfo, textTripFullDetails)
                     } else {
                         Toast.makeText(this@MainActivity, "Login Failed", Toast.LENGTH_SHORT).show()
                         btnLogin.text = "Login"
@@ -91,8 +156,18 @@ class MainActivity : AppCompatActivity() {
 
         // Start Trip Button Click Listener
         btnStartTrip.setOnClickListener {
-            val tripId = currentTripId ?: return@setOnClickListener
+            // Android 14+ requires runtime location permissions before starting a Location Foreground Service
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    this, 
+                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), 
+                    1001
+                )
+                Toast.makeText(this, "Please grant location permission and click Start again", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
+            val tripId = currentTripId ?: return@setOnClickListener
             btnStartTrip.text = "Starting..."
             btnStartTrip.isEnabled = false
 
@@ -104,12 +179,11 @@ class MainActivity : AppCompatActivity() {
 
                     if (response.isSuccessful) {
                         btnStartTrip.text = "GPS Tracking Active"
-                        // Tell Android to boot up the GPS Background Service!
                         val serviceIntent = Intent(this@MainActivity, LocationService::class.java)
                         serviceIntent.putExtra("TRIP_ID", tripId)
                         startService(serviceIntent)
                     } else {
-                        Toast.makeText(this@MainActivity, "Failed to start trip", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Failed to start", Toast.LENGTH_SHORT).show()
                         btnStartTrip.text = "Start GPS Tracking"
                         btnStartTrip.isEnabled = true
                     }
@@ -120,9 +194,47 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // End Trip Button Click Listener
+        btnEndTrip.setOnClickListener {
+            val tripId = currentTripId ?: return@setOnClickListener
+            btnEndTrip.text = "Ending..."
+            btnEndTrip.isEnabled = false
+
+            mainScope.launch {
+                try {
+                    val response = withContext(Dispatchers.IO) {
+                        NetworkModule.getApi(applicationContext).endTrip(tripId)
+                    }
+
+                    if (response.isSuccessful) {
+                        val serviceIntent = Intent(this@MainActivity, LocationService::class.java)
+                        stopService(serviceIntent)
+                        
+                        // Kick them back to dashboard and refresh
+                        layoutTripDetails.visibility = View.GONE
+                        layoutDashboard.visibility = View.VISIBLE
+                        fetchAssignedTrip(textRouteName, textBusInfo, textTripFullDetails)
+                        
+                        btnEndTrip.text = "End Trip"
+                        btnEndTrip.isEnabled = true
+                        btnStartTrip.text = "Start GPS Tracking"
+                        btnStartTrip.isEnabled = true
+                    } else {
+                        Toast.makeText(this@MainActivity, "Failed to end", Toast.LENGTH_SHORT).show()
+                        btnEndTrip.text = "End Trip"
+                        btnEndTrip.isEnabled = true
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Network Error", Toast.LENGTH_SHORT).show()
+                    btnEndTrip.text = "End Trip"
+                    btnEndTrip.isEnabled = true
+                }
+            }
+        }
     }
 
-    private fun fetchAssignedTrip(textTripDetails: TextView) {
+    private fun fetchAssignedTrip(textRouteName: TextView, textBusInfo: TextView, textTripFullDetails: TextView) {
         mainScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
@@ -132,12 +244,24 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val trip = response.body()?.data!!
                     currentTripId = trip.tripId
-                    textTripDetails.text = "Bus: ${trip.busNumber}\nRoute: ${trip.routeCode}\nStatus: ${trip.status}"
+                    
+                    // Human readable date (e.g. "2026-09-18T18:30:00.000Z" -> "2026-09-18")
+                    val rawDate = trip.scheduledDate
+                    val cleanDate = if (rawDate.contains("T")) rawDate.split("T")[0] else rawDate
+
+                    // Populate UI
+                    textRouteName.text = trip.routeName
+                    textBusInfo.text = "Bus: ${trip.busNumber} • Date: $cleanDate"
+                    
                 } else {
-                    textTripDetails.text = "No trip assigned for today."
+                    currentTripId = null // CLEAR THE ID SO THEY CANNOT CLICK
+                    textRouteName.text = "No trips assigned"
+                    textBusInfo.text = "You are off duty today."
                 }
             } catch (e: Exception) {
-                textTripDetails.text = "Network error fetching trip."
+                currentTripId = null // CLEAR THE ID ON ERROR TOO
+                textRouteName.text = "Network error"
+                textBusInfo.text = "Could not fetch trips."
             }
         }
     }

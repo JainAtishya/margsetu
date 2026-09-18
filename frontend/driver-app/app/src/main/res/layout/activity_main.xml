@@ -131,27 +131,158 @@
                     android:padding="20dp"
                     android:background="#1976D2">
 
-                    <TextView
+                    <RelativeLayout
                         android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textWelcome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Welcome Driver"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/btnLogout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:text="Logout"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:padding="8dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"/>
+                    </RelativeLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Separate Card for the Trip Item -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardTripItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:layout_marginTop="16dp"
+                android:foreground="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <!-- Standard Map Icon (No Emojis) -->
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_dialog_map"
+                        app:tint="#1976D2"
+                        android:padding="8dp" />
+
+                    <!-- Text Details -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Welcome Driver"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp">
+                        
+                        <TextView
+                            android:id="@+id/textRouteName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Loading Route..."
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#2C3E50" />
+
+                        <TextView
+                            android:id="@+id/textBusInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Bus Info"
+                            android:textSize="14sp"
+                            android:textColor="#7F8C8D"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Chevron to indicate it's clickable -->
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_media_play"
+                        app:tint="#BDC3C7" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- ============================== -->
+        <!--    TRIP DETAILS SCREEN         -->
+        <!-- ============================== -->
+        <LinearLayout
+            android:id="@+id/layoutTripDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Header Card for Details -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:background="#1976D2">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/btnBack"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="← Back"
+                            android:textColor="#FFFFFF"
+                            android:textStyle="bold"
+                            android:padding="8dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true"/>
+                    </RelativeLayout>
 
                     <TextView
-                        android:id="@+id/textTripDetails"
+                        android:id="@+id/textTripFullDetails"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Fetching assigned trip..."
-                        android:textSize="16sp"
-                        android:textColor="#E3F2FD"
-                        android:layout_marginTop="8dp" />
+                        android:text="Trip Details"
+                        android:textSize="18sp"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginTop="16dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <!-- Journey Control Card -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardJourneyControl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="16dp"
@@ -181,6 +312,16 @@
                         android:textSize="18sp"
                         app:cornerRadius="12dp"
                         android:backgroundTint="#27AE60" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEndTrip"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:text="End Trip"
+                        android:textSize="18sp"
+                        android:layout_marginTop="12dp"
+                        app:cornerRadius="12dp"
+                        android:backgroundTint="#E74C3C" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>

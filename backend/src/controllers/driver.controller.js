@@ -17,6 +17,12 @@ class DriverController {
         return res.status(200).json(new ApiResponse(200, result, 'Login successful'));
     });
 
+    static logout = asyncHandler(async (req, res) => {
+        const driverId = req.driver.id; // From verifyToken middleware
+        await DriverService.logout(driverId);
+        res.status(200).json(new ApiResponse(200, "Logged out successfully"));
+    });
+
     static refresh = asyncHandler(async (req, res) => {
         const { refresh_token } = req.body;
 

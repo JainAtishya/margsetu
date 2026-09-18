@@ -71,7 +71,7 @@ async function seed() {
 
         // 7. create a PENDING trip for today
         await pool.query(
-            `INSERT INTO trips (route_id, bus_id, driver_id, status) VALUES ($1, $2, $3, $4)`,
+            `INSERT INTO trips (route_id, bus_id, driver_id, scheduled_date, status) VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
             [routeId, busId, driverId, 'PENDING']
         );
 

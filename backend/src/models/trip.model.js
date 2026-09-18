@@ -5,7 +5,7 @@ class TripModel {
     // Finds a PENDING or ACTIVE trip for a specific driver for today's date
     static async findTodayTripForDriver(driverId) {
         const query = `
-            SELECT t.id, t.status, t.scheduled_date, 
+            SELECT t.id as trip_id, t.status, t.scheduled_date, 
                    r.route_code, r.name as route_name, 
                    b.registration_number as bus_number
             FROM trips t
@@ -67,6 +67,46 @@ class TripModel {
         `;
         const result = await pool.query(query, [status, tripId, driverId]);
         return result.rows[0];
+    }
+
+    static async endTrip(tripId, driverId) {
+        const result = await pool.query(
+            `UPDATE trips SET status = 'COMPLETED' WHERE id = $1 AND driver_id = $2 RETURNING *`,
+            [tripId, driverId]
+        );
+        return result.rows[0];
+    }
+
+    static async getTripDetailsById(tripId, driverId) {
+        const result = await pool.query(`
+            SELECT 
+                t.id as trip_id, t.status, t.scheduled_date,
+                b.id as bus_id, b.registration_number as bus_reg, b.capacity as bus_cap,
+                r.id as route_id, r.route_code, r.name as route_name
+            FROM trips t
+            JOIN buses b ON t.bus_id = b.id
+            JOIN routes r ON t.route_id = r.id
+            WHERE t.id = $1 AND t.driver_id = $2
+        `, [tripId, driverId]);
+        
+        if (result.rows.length === 0) return null;
+        
+        const row = result.rows[0];
+        return {
+            tripId: row.trip_id,
+            status: row.status,
+            scheduledDate: row.scheduled_date,
+            bus: {
+                id: row.bus_id,
+                registrationNumber: row.bus_reg,
+                capacity: row.bus_cap
+            },
+            route: {
+                id: row.route_id,
+                code: row.route_code,
+                name: row.route_name
+            }
+        };
     }
 }
 
